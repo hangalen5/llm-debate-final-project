@@ -1,5 +1,5 @@
 from collections import Counter
-from chat import chat  # Import trực tiếp từ file chat.py nằm chung trong thư mục src/
+from chat import chat  
 from dataset_loader import extract_gsm8k_answer
 
 def get_majority_vote(answers: list) -> str:

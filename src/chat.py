@@ -1,55 +1,33 @@
 import os
-import json
 from openai import OpenAI
 
-# Initialize OpenAI client connected to DeepSeek API
-# (DeepSeek uses OpenAI-compatible standard)
-client = OpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY"),
-    base_url="https://api.deepseek.com"
-)
+def get_client():
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise ValueError("Environment variable DEEPSEEK_API_KEY is not set!")
+    return OpenAI(
+        api_key=api_key,
+        base_url="https://api.deepseek.com",
+        timeout=30.0 # Thêm timeout để tránh treo kết nối
+    )
 
-def call_deepseek(prompt: str, model: str = "deepseek-chat", temperature: float = 0.7) -> str:
-    """
-    Function to call DeepSeek API to get a response from the LLM.
-    Can be extended with caching if needed.
-    """
+def call_deepseek(prompt: str) -> str:
+    """Gọi DeepSeek API với model 'deepseek-chat'"""
     try:
+        client = get_client()
         response = client.chat.completions.create(
-            model=model,
+            model="deepseek-chat",
             messages=[
-                {"role": "system", "content": "You are a helpful and rigorous debater assistant."},
+                {"role": "system", "content": "You are a helpful assistant that solves math problems step-by-step."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=temperature,
             stream=False
         )
-        
-        # Extract the response content
-        answer = response.choices[0].message.content
-        
-        # Log token usage for cost control (project requirement)
-        usage = response.usage
-        if usage:
-            print(f"[API Token Usage] Prompt: {usage.prompt_tokens}, Completion: {usage.completion_tokens}, Total: {usage.total_tokens}")
-            
-        return answer
-    except Exception as e:
-        print(f"[Error] Failed to call DeepSeek API: {e}")
-        return ""
-# Extract the response content
-        answer = response.choices[0].message.content
-        
-        # Log token usage for cost control (project requirement)
-        usage = response.usage
-        if usage:
-            print(f"[API Token Usage] Prompt: {usage.prompt_tokens}, Completion: {usage.completion_tokens}, Total: {usage.total_tokens}")
-            
-        return answer
+        return response.choices[0].message.content
     except Exception as e:
         print(f"[Error] Failed to call DeepSeek API: {e}")
         return ""
 
-# Thêm hàm wrapper này vào cuối file src/chat.py để tương thích với các module khác:
 def chat(prompt: str) -> str:
+    """Hàm wrapper tương thích với debate engine"""
     return call_deepseek(prompt)
