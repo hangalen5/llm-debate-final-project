@@ -9,7 +9,7 @@ client = OpenAI(
     base_url="https://api.deepseek.com"
 )
 
-def call_deepseek(prompt: str, model: str = "deepseek-chat", temperature: float = 0.7) -> str:
+def call_deepseek(prompt: str, model: str = "deepseek-flash", temperature: float = 0.7) -> str:
     """
     Function to call DeepSeek API to get a response from the LLM.
     Can be extended with caching if needed.
