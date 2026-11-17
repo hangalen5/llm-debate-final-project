@@ -37,3 +37,19 @@ def call_deepseek(prompt: str, model: str = "deepseek-chat", temperature: float 
     except Exception as e:
         print(f"[Error] Failed to call DeepSeek API: {e}")
         return ""
+# Extract the response content
+        answer = response.choices[0].message.content
+        
+        # Log token usage for cost control (project requirement)
+        usage = response.usage
+        if usage:
+            print(f"[API Token Usage] Prompt: {usage.prompt_tokens}, Completion: {usage.completion_tokens}, Total: {usage.total_tokens}")
+            
+        return answer
+    except Exception as e:
+        print(f"[Error] Failed to call DeepSeek API: {e}")
+        return ""
+
+# Thêm hàm wrapper này vào cuối file src/chat.py để tương thích với các module khác:
+def chat(prompt: str) -> str:
+    return call_deepseek(prompt)
