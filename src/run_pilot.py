@@ -1,6 +1,6 @@
 import os
-from dataset_loader import load_gsm8k_sample
-from debate_engine import run_direct_baseline, run_self_consistency, run_debate
+from src.dataset_loader import load_gsm8k_sample
+from src.debate_engine import run_direct_baseline, run_self_consistency, run_debate
 
 def evaluate_pilot():
     print("Loading GSM8K sample dataset...")
