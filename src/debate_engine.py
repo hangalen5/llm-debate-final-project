@@ -1,65 +1,84 @@
-from collections import Counter
-from src.chat import chat  
-from src.dataset_loader import extract_gsm8k_answer
+import json
+import re
+from chat import chat
 
-def get_majority_vote(answers: list) -> str:
-    valid = [a for a in answers if a]
-    if not valid:
-        return ""
-    return Counter(valid).most_common(1)[0][0]
-
-# --- 1. BASELINE: DIRECT (1 CALL) ---
-def run_direct_baseline(question: str) -> str:
-    prompt = (
-        f"Solve the following math problem step by step. "
-        f"End your response with 'Answer: <number>'.\n\nQuestion: {question}"
+def run_debate_with_judge(question: str, n_rounds: int = 1) -> dict:
+    """
+    Standard LLM Debate Engine:
+    - Round 0: Debater A and Debater B answer the question independently.
+    - Round 1..N: Each debater reads the other's previous response, defends their stance, or updates it.
+    - Judge: An impartial judge reads the final arguments and returns a structured JSON 
+      containing reasoning and the winner ('A' or 'B').
+    """
+    # --- ROUND 0: Independent initial answers ---
+    prompt_a_r0 = (
+        f"You are Debater A. Answer the following math question step by step "
+        f"and clearly state your final numerical answer.\n\nQuestion: {question}"
     )
-    response = chat(prompt)
-    return extract_gsm8k_answer(response)
+    prompt_b_r0 = (
+        f"You are Debater B. Answer the following math question step by step "
+        f"and clearly state your final numerical answer.\n\nQuestion: {question}"
+    )
+    
+    reply_a = chat(prompt_a_r0)
+    reply_b = chat(prompt_b_r0)
 
-# --- 2. BASELINE: SELF-CONSISTENCY (k CALLS) ---
-def run_self_consistency(question: str, k: int = 5) -> str:
-    answers = []
-    for i in range(k):
-        prompt = (
-            f"Attempt {i+1}: Solve the following math problem step by step. "
-            f"End your response with 'Answer: <number>'.\n\nQuestion: {question}"
-        )
-        response = chat(prompt)
-        answers.append(extract_gsm8k_answer(response))
-    return get_majority_vote(answers)
-
-# --- 3. DEBATE ENGINE (N AGENTS x R ROUNDS) ---
-def run_debate(question: str, n_agents: int = 3, n_rounds: int = 2) -> str:
-    # Round 0: Each agent answers independently
-    agent_histories = []
-    for i in range(n_agents):
-        prompt = (
-            f"You are Debater {i+1}. Solve this problem step by step. "
-            f"End with 'Answer: <number>'.\n\nQuestion: {question}"
-        )
-        reply = chat(prompt)
-        agent_histories.append(reply)
-
-    # Round 1 to R: Read other debaters' responses and update
+    # --- ROUND 1..N: Critique and Defense ---
     for r in range(1, n_rounds + 1):
-        new_histories = []
-        for i in range(n_agents):
-            others_text = "\n\n".join(
-                [f"--- Debater {j+1}'s response ---\n{agent_histories[j]}" 
-                 for j in range(n_agents) if j != i]
-            )
-            prompt = (
-                f"Question: {question}\n\n"
-                f"Your previous response:\n{agent_histories[i]}\n\n"
-                f"Other debaters' responses:\n{others_text}\n\n"
-                f"Carefully review their reasoning. Point out any flaws in their logic or your own, "
-                f"then provide your updated solution. End with 'Answer: <number>'."
-            )
-            reply = chat(prompt)
-            new_histories.append(reply)
-        agent_histories = new_histories
+        prompt_a = (
+            f"Question: {question}\n\n"
+            f"Your previous answer (Debater A):\n{reply_a}\n\n"
+            f"Debater B's answer:\n{reply_b}\n\n"
+            f"Read Debater B's argument. Defend your answer or update it if B is right. "
+            f"Point out any flaws in B's reasoning."
+        )
+        prompt_b = (
+            f"Question: {question}\n\n"
+            f"Your previous answer (Debater B):\n{reply_b}\n\n"
+            f"Debater A's answer:\n{reply_a}\n\n"
+            f"Read Debater A's argument. Defend your answer or update it if A is right. "
+            f"Point out any flaws in A's reasoning."
+        )
+        
+        reply_a = chat(prompt_a)
+        reply_b = chat(prompt_b)
 
-    # Aggregate final answers using Majority Vote
-    final_answers = [extract_gsm8k_answer(ans) for ans in agent_histories]
-    return get_majority_vote(final_answers)
+    # --- JUDGE: Evaluate final arguments and output JSON ---
+    judge_prompt = (
+        f"You are an impartial Judge. Read the question and the final arguments from Debater A and Debater B.\n"
+        f"Determine which debater has the correct and more sound reasoning.\n\n"
+        f"Question: {question}\n\n"
+        f"Debater A's final reply:\n{reply_a}\n\n"
+        f"Debater B's final reply:\n{reply_b}\n\n"
+        f'Respond ONLY with a valid JSON object in this exact format: {{"reasoning": "<your explanation>", "winner": "A" or "B"}}'
+    )
+    
+    judge_raw = chat(judge_prompt)
+    
+    # Extract JSON response safely from judge output
+    try:
+        json_match = re.search(r"\{.*\}", judge_raw, re.DOTALL)
+        judge_result = json.loads(json_match.group(0)) if json_match else {"reasoning": judge_raw, "winner": "Unknown"}
+    except Exception:
+        judge_result = {"reasoning": judge_raw, "winner": "Error parsing JSON"}
+
+    # Extract final numerical prediction from the winner's text
+    winner_text = reply_a if judge_result.get("winner") == "A" else reply_b
+    
+    # Try multiple regex patterns to reliably capture the numerical answer
+    match = re.search(r"\\boxed\{([0-9,\.]+)\}", winner_text)
+    if not match:
+        match = re.search(r"\*\*([0-9,\.]+)\*\*", winner_text)
+    if not match:
+        # Fallback to search for the last sequence of digits/numbers
+        numbers = re.findall(r"([0-9,]+(?:\.[0-9]+)?)", winner_text)
+        final_pred = numbers[-1].replace(",", "") if numbers else ""
+    else:
+        final_pred = match.group(1).replace(",", "")
+
+    return {
+        "debater_a_final": reply_a,
+        "debater_b_final": reply_b,
+        "judge": judge_result,
+        "prediction": final_pred
+    }
