@@ -1,6 +1,10 @@
 from collections import Counter
-from chat import chat  
-from dataset_loader import extract_gsm8k_answer
+if __package__:
+    from .chat import chat
+    from .answers import extract_gsm8k_answer
+else:
+    from chat import chat
+    from answers import extract_gsm8k_answer
 
 def get_majority_vote(answers: list) -> str:
     valid = [a for a in answers if a]
