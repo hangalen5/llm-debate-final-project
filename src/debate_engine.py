@@ -65,16 +65,24 @@ def run_debate_with_judge(question: str, n_rounds: int = 1) -> dict:
     # Extract final numerical prediction from the winner's text
     winner_text = reply_a if judge_result.get("winner") == "A" else reply_b
     
-    # Try multiple regex patterns to reliably capture the numerical answer
-    match = re.search(r"\\boxed\{([0-9,\.]+)\}", winner_text)
-    if not match:
-        match = re.search(r"\*\*([0-9,\.]+)\*\*", winner_text)
-    if not match:
-        # Fallback to search for the last sequence of digits/numbers
-        numbers = re.findall(r"([0-9,]+(?:\.[0-9]+)?)", winner_text)
-        final_pred = numbers[-1].replace(",", "") if numbers else ""
-    else:
-        final_pred = match.group(1).replace(",", "")
+    # Robust extraction handling LaTeX formatting like \boxed{...} with comma/braces
+    final_pred = ""
+    boxed_match = re.search(r"\\boxed\{((?:[^{}]|\{[^{}]*\})*)\}", winner_text)
+    if boxed_match:
+        boxed_content = boxed_match.group(1).replace("{,}", "").replace(",", "")
+        nums_in_box = re.findall(r"[0-9]+(?:\.[0-9]+)?", boxed_content)
+        if nums_in_box:
+            final_pred = nums_in_box[-1]
+            
+    if not final_pred:
+        # Fallback 1: look for bolded numbers like **70,000** or **$70,000**
+        bold_match = re.search(r"\*\*\$?([0-9,\.]+)", winner_text)
+        if bold_match:
+            final_pred = bold_match.group(1).replace(",", "")
+        else:
+            # Fallback 2: grab the last standalone number in the text
+            numbers = re.findall(r"([0-9,]+(?:\.[0-9]+)?)", winner_text)
+            final_pred = numbers[-1].replace(",", "") if numbers else ""
 
     return {
         "debater_a_final": reply_a,
