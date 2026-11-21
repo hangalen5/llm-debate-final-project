@@ -1,0 +1,170 @@
+import argparse
+import inspect
+import json
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+from datasets import load_dataset
+from openai import OpenAI
+
+ROOT_DIR = Path("/Users/linndsey/llm-debate-final-project")
+SRC_DIR = ROOT_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from debate_engine import run_debate_with_judge  # noqa: E402
+
+DEFAULT_OUTPUT = ROOT_DIR / "pilot_results.json"
+
+MODEL = os.getenv("DEBATE_MODEL", "deepseek-chat")
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", MODEL)
+BASE_URL = os.getenv("DEEPSEEK_BASE_URL") or os.getenv("BASE_URL") or "https://api.deepseek.com"
+
+INPUT_PRICE_RMB_PER_1M = float(os.getenv("DS_INPUT_RMB_PER_1M", "2.0"))
+OUTPUT_PRICE_RMB_PER_1M = float(os.getenv("DS_OUTPUT_RMB_PER_1M", "8.0"))
+
+
+def get_client() -> OpenAI:
+    api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing DEEPSEEK_API_KEY or OPENAI_API_KEY in environment.")
+    return OpenAI(api_key=api_key, base_url=BASE_URL)
+
+
+def canonicalize_number(raw: str) -> str:
+    text = (raw or "").strip().replace("$", "").replace(",", "")
+    match = re.search(r"-?\d+(?:\.\d+)?", text)
+    if not match:
+        return ""
+    num_str = match.group(0)
+    try:
+        val = float(num_str)
+        return str(int(val)) if val.is_integer() else f"{val:g}"
+    except ValueError:
+        return num_str
+
+
+def extract_gold_answer(gsm8k_answer: str) -> str:
+    if "####" in gsm8k_answer:
+        tail = gsm8k_answer.split("####")[-1].strip()
+        return canonicalize_number(tail)
+    return canonicalize_number(gsm8k_answer)
+
+
+def extract_pred_answer(text: str) -> str:
+    if not text:
+        return ""
+    boxed_matches = re.findall(r"\\boxed\{([^{}]+)\}", text)
+    if boxed_matches:
+        for bm in reversed(boxed_matches):
+            cleaned = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", bm)
+            ans = canonicalize_number(cleaned)
+            if ans:
+                return ans
+
+    ans_lines = re.findall(r"(?:final answer|answer)\s*[:\-–]\s*([^\n]+)", text, flags=re.IGNORECASE)
+    if ans_lines:
+        for line in reversed(ans_lines):
+            ans = canonicalize_number(line)
+            if ans:
+                return ans
+
+    nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", text)
+    if nums:
+        return canonicalize_number(nums[-1])
+    return ""
+
+
+def invoke_debate_engine(client: OpenAI, question: str, gold_answer: str) -> dict[str, Any]:
+    sig = inspect.signature(run_debate_with_judge)
+    params = sig.parameters
+    kwargs: dict[str, Any] = {}
+
+    if "client" in params:
+        kwargs["client"] = client
+    if "question" in params:
+        kwargs["question"] = question
+    elif "problem" in params:
+        kwargs["problem"] = question
+    if "gold_answer" in params:
+        kwargs["gold_answer"] = gold_answer
+    elif "answer" in params:
+        kwargs["answer"] = gold_answer
+    if "model" in params:
+        kwargs["model"] = MODEL
+    if "judge_model" in params:
+        kwargs["judge_model"] = JUDGE_MODEL
+    if "base_url" in params:
+        kwargs["base_url"] = BASE_URL
+
+    if kwargs:
+        result = run_debate_with_judge(**kwargs)
+    else:
+        result = run_debate_with_judge(question)
+
+    if isinstance(result, dict):
+        return result
+    return {"raw_output": result}
+
+
+def normalize_record(sample_id: int, question: str, gold_answer: str, engine_out: dict[str, Any]) -> dict[str, Any]:
+    a_final = str(
+        engine_out.get("debater_a_final")
+        or engine_out.get("final_a")
+        or engine_out.get("a_final")
+        or ""
+    )
+    b_final = str(
+        engine_out.get("debater_b_final")
+        or engine_out.get("final_b")
+        or engine_out.get("b_final")
+        or ""
+    )
+
+    judge_raw = engine_out.get("judge_decision") or engine_out.get("judge") or {}
+    if isinstance(judge_raw, dict):
+        winner = str(judge_raw.get("winner") or engine_out.get("winner") or "UNKNOWN").strip().upper()
+        reasoning = str(judge_raw.get("reasoning") or engine_out.get("judge_reasoning") or "").strip()
+        judge_decision = {"winner": winner, "reasoning": reasoning}
+    else:
+        winner = str(engine_out.get("winner") or "UNKNOWN").strip().upper()
+        judge_decision = {"winner": winner, "reasoning": str(judge_raw).strip()}
+
+    pred_a = canonicalize_number(str(engine_out.get("pred_a") or "")) or extract_pred_answer(a_final)
+    pred_b = canonicalize_number(str(engine_out.get("pred_b") or "")) or extract_pred_answer(b_final)
+
+    chosen_pred = canonicalize_number(str(engine_out.get("chosen_prediction") or engine_out.get("prediction") or ""))
+    if not chosen_pred:
+        if winner == "B" and pred_b:
+            chosen_pred = pred_b
+        elif pred_a:
+            chosen_pred = pred_a
+        else:
+            chosen_pred = pred_b
+
+    if "is_correct" in engine_out and isinstance(engine_out["is_correct"], bool):
+        is_correct = engine_out["is_correct"]
+    else:
+        is_correct = chosen_pred == gold_answer
+
+    return {
+        "sample_id": sample_id,
+        "question": question,
+        "gold_answer": gold_answer,
+        "debater_a_round1": engine_out.get("debater_a_round1", ""),
+        "debater_b_round1": engine_out.get("debater_b_round1", ""),
+        "debater_a_final": a_final,
+        "debater_b_final":
+python3 -m py_compile /Users/linndsey/llm-debate-final-project/src/run_pilot.py
+python3 -u /Users/linndsey/llm-debate-final-project/src/run_pilot.py
+
+python3 -u "/Users/linndsey/llm-debate-final-project/src/run_pilot.py"
+python3 -u "/Users/linndsey/llm-debate-final-project/src/run_pilot.py"
+
+python3 -u "/Users/linndsey/llm-debate-final-project/src/run_pilot.py"
+

@@ -1,0 +1,6 @@
+experiment,scope,metric,total_tokens,cost_rmb
+Debate Evaluation (N=30),N=30,24/30 (80.0%),0,Check run log
+Judge Position Bias (Swapped B/A),N=30 (30 calls),Flip=43.3%,19048,0.0624
+Judge Debiasing (2-Pass),N=30 (60 calls),TIE=100.0%,36590,0.1041
+Experiment 1 Total,N=30 (90 calls),Cons=100.0%,55638,0.1664
+Self-Consistency (k=20),N=30 (600 calls),100.0% (30/30),172926,1.0816

@@ -1,0 +1,346 @@
+{
+  "summary": {
+    "n_samples": 30,
+    "original_ab": {
+      "A": 17,
+      "B": 13,
+      "A_pct": 56.7,
+      "B_pct": 43.3
+    },
+    "swapped_ba": {
+      "A": 16,
+      "B": 14,
+      "A_pct": 53.3,
+      "B_pct": 46.7,
+      "flip_rate_vs_orig_pct": 43.3,
+      "flips_count": 13,
+      "stats": {
+        "calls": 30,
+        "prompt_tokens": 15002,
+        "completion_tokens": 4046,
+        "total_tokens": 19048,
+        "cost_rmb": 0.062371999999999976
+      }
+    },
+    "debiased_balanced": {
+      "A": 0,
+      "B": 0,
+      "TIE": 30,
+      "A_pct": 0.0,
+      "B_pct": 0.0,
+      "TIE_pct": 100.0,
+      "swap_consistency_pct": 100.0,
+      "stats": {
+        "calls": 60,
+        "prompt_tokens": 31444,
+        "completion_tokens": 5146,
+        "total_tokens": 36590,
+        "cost_rmb": 0.104056
+      }
+    },
+    "total_exp1_tokens": 55638,
+    "total_exp1_cost_rmb": 0.1664
+  },
+  "records": [
+    {
+      "sample_id": 1,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 2,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 3,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 4,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 5,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 6,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 7,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 8,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 9,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 10,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 11,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 12,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 13,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 14,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 15,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 16,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 17,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 18,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 19,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 20,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 21,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 22,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 23,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 24,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 25,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 26,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": false,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 27,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 28,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 29,
+      "orig_winner_ab": "B",
+      "swapped_winner_ba": "A",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    },
+    {
+      "sample_id": 30,
+      "orig_winner_ab": "A",
+      "swapped_winner_ba": "B",
+      "flipped_on_swap": true,
+      "debiased_winner": "TIE",
+      "debiased_pass_ab": "TIE",
+      "debiased_pass_ba": "TIE",
+      "debiased_consistent": true
+    }
+  ]
+}
